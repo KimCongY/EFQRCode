@@ -25,19 +25,55 @@
 //  THE SOFTWARE.
 
 import CoreGraphics
-import CoreImage
 
-public extension CGColor {
+#if os(watchOS)
+    import UIKit
 
-    public static func EFWhite() -> CGColor! {
-        return CIColor.EFWhite().toCGColor()
+    public extension CGColor {
+
+        public static func EFWhite() -> CGColor! {
+            return UIColor.white.cgColor
+        }
+
+        public static func EFBlack() -> CGColor! {
+            return UIColor.black.cgColor
+        }
+
+        func toEFUIntPixel() -> EFUIntPixel? {
+            guard let rgba = converted(to: CGColorSpaceCreateDeviceRGB(),
+                                      intent: .defaultIntent, options: nil),
+                let components = rgba.components,
+                rgba.numberOfComponents == 4
+                else { return nil }
+            return EFUIntPixel(red: UInt8(components[0] * 255.0),
+                               green: UInt8(components[1] * 255.0),
+                               blue: UInt8(components[2] * 255.0),
+                               alpha: UInt8(components[3] * 255.0))
+        }
     }
+#else
+    import CoreImage
 
-    public static func EFBlack() -> CGColor! {
-        return CIColor.EFBlack().toCGColor()
-    }
+    public extension CGColor {
 
-    public func toCIColor() -> CIColor {
-        return CIColor(cgColor: self)
+        public static func EFWhite() -> CGColor! {
+            return CIColor.EFWhite().toCGColor()
+        }
+
+        public static func EFBlack() -> CGColor! {
+            return CIColor.EFBlack().toCGColor()
+        }
+
+        public func toCIColor() -> CIColor {
+            return CIColor(cgColor: self)
+        }
+
+        func toEFUIntPixel() -> EFUIntPixel? {
+            let ciColor = toCIColor()
+            return EFUIntPixel(red: UInt8(ciColor.red * 255.0),
+                               green: UInt8(ciColor.green * 255.0),
+                               blue: UInt8(ciColor.blue * 255.0),
+                               alpha: UInt8(ciColor.alpha * 255.0))
+        }
     }
-}
+#endif
